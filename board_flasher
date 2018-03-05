@@ -1,0 +1,84 @@
+#!/usr/bin/env python3
+import serial, time, os, sys, argparse, subprocess
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--port')
+parser.add_argument('--set_fastboot', action='store_true')
+parser.add_argument('--reset_board', action='store_true')
+parser.add_argument('--flash_folder')
+parser.add_argument('--flash', action='store_true')
+parser.add_argument('--which_to_flash')
+parser.add_argument('--json')
+parser.add_argument('--os_sn')
+
+global port
+port = ""
+global flash_folder
+flash_folder = ""
+global which_to_flash
+which_to_flash = "SOS_and_LaaG"
+global which_json
+which_json = "flash_LaaG.json"
+global os_sn
+os_sn = ""
+
+args = parser.parse_args()
+
+def set_fastboot():
+	global port
+	print(port)
+	ser = serial.Serial(port, 115200, timeout=1)
+	ser.write("r".encode())
+	time.sleep(2)
+	ser.write("n".encode())
+	ser.write("4".encode())
+	ser.write("\r\n".encode())
+	
+def reset_mrb():
+	ser = serial.Serial(port, 115200, timeout=1)
+	ser.write("r".encode())
+	time.sleep(2)
+	ser.write("n".encode())
+	ser.write("1".encode())
+	ser.write("\r\n".encode())
+	
+def flash_board():
+	print("Placeholder")
+
+if args.port:
+	port = args.port
+	
+if args.flash_folder:
+	flash_folder = args.flash_folder
+
+if args.which_to_flash:
+	which_to_flash = args.which_to_flash
+
+if args.json:
+	which_json = args.json
+
+if args.os_sn:
+	os_sn = args.os_sn	
+
+if args.set_fastboot:
+	#print(port)
+	set_fastboot()
+	
+if args.reset_board:
+	#print(port)
+	reset_mrb()
+	
+if args.flash:
+	os.chdir(flash_folder)
+	subprocess.call("pwd", shell=True)
+	subprocess.call("ls", shell=True)
+	flash_command = "cflasher -l 3 -f " + which_json + " -c " + which_to_flash
+	if os_sn:
+		flash_command  = flash_command + " --os-sn " + os_sn
+	print("Flash command: " + flash_command)
+	try:
+		subprocess.check_call(flash_command, shell=True)
+		#subprocess.call("cflasher -l 3 -f flash_LaaG.json -c SOS_and_LaaG", shell=True)
+		exit(0)
+	except subprocess.CalledProcessError as e:
+		exit(e.returncode)
